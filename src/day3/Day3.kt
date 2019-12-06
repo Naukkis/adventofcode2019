@@ -1,10 +1,6 @@
 package day3
 
-import java.lang.Integer.min
-import java.util.stream.Collector
 import java.util.stream.Collectors
-import kotlin.math.abs
-
 
 class Day3 {
 
@@ -14,50 +10,58 @@ class Day3 {
         val wire1 = input[0].split(",")
         val wire2 = input[1].split(",")
 
-        val wire1Coords = getEndPointCoordinates(wire1)
-        val wire2Coords = getEndPointCoordinates(wire2)
-        val shortestManhattanDistance = wire1Coords.parallelStream()
+
+        val wire1Coords = getPathToEndPoint(wire1)
+        val wire2Coords = getPathToEndPoint(wire2)
+        val shortestSteps = wire1Coords.parallelStream()
             .filter { value -> wire2Coords.contains(value) }
             .collect(Collectors.toSet())
-            .minBy { value -> abs(value.first) + abs(value.second) }
+            .map { intersection ->
+                wire1Coords[wire1Coords.indexOf(intersection)].stepCount + wire2Coords[wire2Coords.indexOf(intersection)].stepCount
+            }
+            .min()
 
-
-        val distance = (abs(shortestManhattanDistance?.first ?: 0)) + abs((shortestManhattanDistance?.second ?: 0))
-        println(distance)
+        println(shortestSteps)
     }
 
-    private fun getEndPointCoordinates(wire: List<String>): List<Pair<Int, Int>> {
+    private fun getPathToEndPoint(wire: List<String>): List<CoordinatesWithStepCount> {
         var x = 0
         var y = 0
-        val listOfCoords = mutableListOf<Pair<Int, Int>>()
-        for (direction in wire) {
+        val listOfCoords = mutableListOf<CoordinatesWithStepCount>()
+        var stepCount = 0
+        for (instructions in wire) {
             val xStart = x
             val yStart = y
-            when (direction[0]) {
-                'R' -> x += Integer.valueOf(direction.slice(IntRange(1, direction.length - 1)))
-                'L' -> x -= Integer.valueOf(direction.slice(IntRange(1, direction.length - 1)))
-                'U' -> y += Integer.valueOf(direction.slice(IntRange(1, direction.length - 1)))
-                'D' -> y -= Integer.valueOf(direction.slice(IntRange(1, direction.length - 1)))
+            val direction = instructions[0]
+            val steps = Integer.valueOf(instructions.slice(IntRange(1, instructions.length - 1)))
+            when (direction) {
+                'R' -> x += steps
+                'L' -> x -= steps
+                'U' -> y += steps
+                'D' -> y -= steps
             }
             if (x != xStart) {
                 if (xStart < x) {
                     for (between in xStart + 1..x) {
-                        listOfCoords.add(Pair(between, y))
+                        stepCount += 1
+                        listOfCoords.add(CoordinatesWithStepCount(between, y, stepCount))
                     }
                 } else {
                     for (between in xStart - 1 downTo x) {
-                        listOfCoords.add(Pair(between, y))
+                        stepCount += 1
+                        listOfCoords.add(CoordinatesWithStepCount(between, y, stepCount))
                     }
                 }
-
             } else {
                 if (yStart < y) {
                     for (between in yStart + 1..y) {
-                        listOfCoords.add(Pair(x, between))
+                        stepCount += 1
+                        listOfCoords.add(CoordinatesWithStepCount(x, between, stepCount))
                     }
                 } else {
                     for (between in yStart - 1 downTo y) {
-                        listOfCoords.add(Pair(x, between))
+                        stepCount += 1
+                        listOfCoords.add(CoordinatesWithStepCount(x, between, stepCount))
                     }
                 }
 
@@ -67,6 +71,22 @@ class Day3 {
         return listOfCoords
     }
 
+    private data class CoordinatesWithStepCount(val x: Int, val y: Int, val stepCount: Int) {
+        override fun equals(other: Any?): Boolean {
+            if (other is CoordinatesWithStepCount) {
+                if (this.x == other.x && this.y == other.y) {
+                    return true
+                }
+            }
+            return false
+        }
+
+        override fun hashCode(): Int {
+            var result = x
+            result = 31 * result + y
+            return result
+        }
+    }
 
     private fun readFile(fileName: String) = this::class.java.getResourceAsStream(fileName).bufferedReader().readLines()
 }
