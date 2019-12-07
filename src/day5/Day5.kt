@@ -12,7 +12,7 @@ class Day5 {
     }
 
     private fun runIntMachine(inputCodes: MutableList<Int>): Int {
-        val input = 1
+        val input = 5
         var pointer = 0
         while (pointer < inputCodes.size) {
             val instruction = inputCodes[pointer]
@@ -47,6 +47,43 @@ class Day5 {
                     println(param1)
                     pointer += 2
                 }
+                JUMP_ON_TRUE -> {
+                    val param1 = getParamValue(pointer, paramMode1, 1, inputCodes)
+                    if (param1 != 0) {
+                        pointer = getParamValue(pointer, paramMode2, 2, inputCodes)
+                    } else {
+                        pointer += 3
+                    }
+                }
+                JUMP_ON_FALSE -> {
+                    val param1 = getParamValue(pointer, paramMode1, 1, inputCodes)
+                    if (param1 == 0) {
+                        pointer = getParamValue(pointer, paramMode2, 2, inputCodes)
+                    } else {
+                        pointer += 3
+                    }
+                }
+                LESS_THAN -> {
+                    val param1 = getParamValue(pointer, paramMode1, 1, inputCodes)
+                    val param2 = getParamValue(pointer, paramMode2, 2, inputCodes)
+                    if (param1 < param2) {
+                        inputCodes[getParamValue(pointer, 1, 3, inputCodes)] = 1
+                    } else {
+                        inputCodes[getParamValue(pointer, 1, 3, inputCodes)] = 0
+                    }
+                    pointer += 4
+                }
+                EQUALS -> {
+                    val param1 = getParamValue(pointer, paramMode1, 1, inputCodes)
+                    val param2 = getParamValue(pointer, paramMode2, 2, inputCodes)
+                    if (param1 == param2) {
+                        inputCodes[getParamValue(pointer, 1, 3, inputCodes)] = 1
+                    } else {
+                        inputCodes[getParamValue(pointer, 1, 3, inputCodes)] = 0
+                    }
+                    pointer += 4
+                }
+
                 else -> throw IllegalArgumentException()
             }
 
@@ -71,6 +108,10 @@ enum class Operation(val opCode: Int) {
     MULTIPLY(2),
     SAVE(3),
     OUTPUT(4),
+    JUMP_ON_TRUE(5),
+    JUMP_ON_FALSE(6),
+    LESS_THAN(7),
+    EQUALS(8),
     STOP(99);
 
     companion object {
